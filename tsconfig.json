@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "removeComments": true,
+    "noLib": false,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "es2018",
+    "sourceMap": true,
+    "allowJs": false,
+    "skipLibCheck": false,
+    "composite": true,
+    "baseUrl": "./packages",
+    "paths": {
+      "@armage/edge": ["edge/src"],
+      "@armage/edge/*": ["edge/src/*"],
+      "@armage/ui": ["ui/src"],
+      "@armage/ui/*": ["ui/src/*"]
+    }
+  },
+  "include": [],
+  "references": [
+    {
+      "path": "packages/edge"
+    }
+  ]
+}
