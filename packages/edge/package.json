@@ -9,6 +9,7 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "type": "module",
   "files": [
     "lib",
     "LICENSE",
@@ -20,5 +21,14 @@
   },
   "scripts": {
     "build": "npx tsc -b"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "kdbush": "^4.0.2",
+    "lmdb": "^2.8.4",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node-fetch": "^2.6.4"
   }
 }

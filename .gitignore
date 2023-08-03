@@ -22,3 +22,9 @@ packages/**/package-lock.json
 
 # misc
 .npmrc
+
+#cache
+cache/
+.cache/
+lmdb/
+leveldb/
