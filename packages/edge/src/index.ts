@@ -1,30 +1,40 @@
+import bodyParser from 'body-parser';
+import cors from 'cors';
 import express from 'express';
-import Point from 'kdbush';
-import KdTree from 'kdbush';
+import { createServer } from 'http';
+import { default as ip } from 'ip-info-finder';
+import { default as KdTree, default as Point } from 'kdbush';
 import { open } from 'lmdb';
 import fetch from 'node-fetch';
-
-type EdgeNode = {
-  id: number;
-  location: [number, number];
-  url: string;
-};
+import { WebSocketServer } from 'ws';
+import { EDGE_ID, PORT } from './constants.js';
+import { EdgeNode, edges, getEdges, initializeEdge } from './gossip.js';
 
 const app = express();
-const port = 3000;
-const EDGE_ID = 1;
+app.use(bodyParser.json());
+app.use(cors());
 
-// Example edge nodes data
-const edgeNodes: EdgeNode[] = [
-  { id: 1, location: [40.712776, -74.005974], url: 'https://edge1.example.com' }, // New York, NY, USA
-  { id: 2, location: [34.052235, -118.243683], url: 'https://edge2.example.com' }, // Los Angeles, CA, USA
-  { id: 3, location: [51.507351, -0.127758], url: 'https://edge3.example.com' }, // London, UK
-];
+interface GEO {
+  ip: string;
+  lat: number;
+  lon: number;
+  country: string;
+  region: string;
+}
+
+const server = createServer(app);
+const wss = new WebSocketServer({ server });
+
+export let geo: GEO | null = null;
+
+// Set up LMDB environment and open database
+const env = open({ path: './lmdb', mapSize: 2 * 1024 * 1024 * 1024 });
+const edgeDB = env.openDB({ name: 'images', cache: true, compression: true });
 
 // Function to build a k-d tree from a set of edge nodes
-function buildKdTree(edgeNodes: EdgeNode[]) {
-  const kd = new KdTree(edgeNodes.length);
-  edgeNodes.map((node) => kd.add(node.location[0], node.location[1]));
+function buildKdTree() {
+  const kd = new KdTree(getEdges().length);
+  getEdges().map((node) => kd.add(node.location[0], node.location[1]));
   kd.finish();
   return kd;
 }
@@ -33,15 +43,8 @@ function buildKdTree(edgeNodes: EdgeNode[]) {
 function findClosestEdgeNode(userLocation: [number, number], tree: Point) {
   const nearest = tree.within(userLocation[0], userLocation[1], 1);
   const nearestIndex = nearest[0];
-  return edgeNodes[nearestIndex];
+  return getEdges()[nearestIndex];
 }
-
-// Build the k-d tree from the set of edge nodes
-const kdTree = buildKdTree(edgeNodes);
-
-// Set up LMDB environment and open database
-const env = open({ path: './lmdb', mapSize: 2 * 1024 * 1024 * 1024 });
-const dbi = env.openDB({ name: 'images', cache: true, compression: true });
 
 app.get('/', async (req, res) => {
   const imageUrl: string = req.query.url;
@@ -58,36 +61,68 @@ app.get('/', async (req, res) => {
   // Determine nearest edge
   let closestNode;
   if (req.query.edgeId === EDGE_ID) {
-    // Nearest edge is self
     closestNode = { id: EDGE_ID };
   } else {
-    // Determine user's location
     await getUserLocation();
-
-    closestNode = findClosestEdgeNode(userLocation!, kdTree);
-
+    closestNode = findClosestEdgeNode(userLocation!, buildKdTree());
     if (closestNode.id !== EDGE_ID) {
-      // Redirect to nearest edge node
       res.redirect(`${closestNode.url}?url=${imageUrl}&edgeId=${EDGE_ID}`);
       return;
     }
   }
 
+  // Get image from cache or fetch from origin
   let image;
-  dbi.transaction(async () => {
-    image = dbi.getBinary(imageUrl);
+  edgeDB.transaction(async () => {
+    image = edgeDB.getBinary(imageUrl);
     if (!image) {
-      // Image not in cache
       image = await fetch(imageUrl).then((res) => res.arrayBuffer());
-      dbi.put(imageUrl, image);
+      edgeDB.put(imageUrl, image);
     }
   });
 
-  // Return image
   res.set('Content-Type', 'image/jpeg');
   res.send(image);
 });
 
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+app.get('/edges', (req, res) => {
+  res.json(getEdges());
+});
+
+// Handle incoming connections from other nodes
+wss.on('connection', (socket, req) => {
+  if (!geo) {
+    ip.getIPInfo(req.socket.localAddress)
+      .then((data) => {
+        geo = {
+          ip: data.ipAddress,
+          lat: data.lat,
+          lon: data.lon,
+          country: data.Country,
+          region: data.Continent,
+        };
+      })
+      .catch((err) => null);
+  }
+  // Handle incoming gossip data from other nodes
+  socket.on('error', (err) => console.error(err));
+  socket.on('message', (data) => {
+    // Get information about the other edge
+    const newData = JSON.parse((data as unknown) as string) as { edge: EdgeNode };
+    const newEdge = newData.edge;
+
+    // Update the edge map with the new edge data
+    const existingEdge = edges.get(newEdge.id);
+    if (!existingEdge || newEdge.timestamp! > existingEdge.timestamp!) {
+      edges.set(newEdge.id, newEdge);
+    }
+
+    // Send information about all known nodes to other edge
+    socket.send(JSON.stringify({ edges: getEdges() }));
+  });
+});
+
+server.listen(PORT, () => {
+  initializeEdge();
+  console.log(`Express server listening at http://localhost:${PORT}`);
 });

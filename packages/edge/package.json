@@ -1,5 +1,5 @@
 {
-  "name": "@./edge",
+  "name": "@arMage/edge",
   "description": "edge node",
   "version": "0.0.0",
   "license": "MIT",
@@ -20,15 +20,24 @@
     "email": "anyaogupeter601@gmail.com"
   },
   "scripts": {
-    "build": "npx tsc -b"
+    "build": "npx tsc",
+    "start": "npx ts-node-esm dist/index.js",
+    "dev": "npx ts-node-esm src/index.ts",
+    "docker:build": "docker build -t ar-mage/edge .",
+    "docker:run": "docker run -it --rm -p 8080:8080 3000:3000 ar-mage/edge"
   },
   "dependencies": {
+    "body-parser": "^1.20.2",
     "express": "^4.18.2",
+    "ip-info-finder": "^3.0.3",
     "kdbush": "^4.0.2",
     "lmdb": "^2.8.4",
-    "node-fetch": "^3.3.2"
+    "node-fetch": "^3.3.2",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
-    "@types/node-fetch": "^2.6.4"
+    "@types/ws": "^8.5.5",
+    "@types/node-fetch": "^2.6.4",
+    "cors": "^2.8.5"
   }
 }

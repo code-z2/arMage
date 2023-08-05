@@ -5,6 +5,7 @@
   "description": "image cdn on arweave",
   "license": "MIT",
   "repository": "https://github.com/peteruche21/arMage",
+  "type": "module",
   "author": {
     "name": "peter anyaogu",
     "email": "anyaogupeter601@gmail.com"

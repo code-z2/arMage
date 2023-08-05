@@ -10,10 +10,10 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "rootDir": "src",
-    "outDir": "lib",
+    "outDir": "dist",
     "removeComments": false
   },
   "include": ["src"],
-  "exclude": ["lib"],
+  "exclude": ["dist"],
   "references": []
 }
