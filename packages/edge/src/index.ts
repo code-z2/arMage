@@ -3,10 +3,11 @@ import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
 import { default as ip } from 'ip-info-finder';
+import Jimp from 'jimp';
 import { default as KdTree, default as Point } from 'kdbush';
 import { open } from 'lmdb';
-import fetch from 'node-fetch';
 import { WebSocketServer } from 'ws';
+import { resize } from './actions.js';
 import { EDGE_ID, PORT } from './constants.js';
 import { EdgeNode, edges, getEdges, initializeEdge } from './gossip.js';
 
@@ -47,15 +48,22 @@ function findClosestEdgeNode(userLocation: [number, number], tree: Point) {
 }
 
 app.get('/', async (req, res) => {
-  const imageUrl: string = req.query.url;
+  const imageUrl = req.query.img;
+
+  if (!imageUrl) {
+    res.status(404).send('Image not found');
+    return;
+  }
+
   let userLocation: [number, number];
 
   // Define a function to get the user's location based on their IP address
   async function getUserLocation() {
-    const ipAddress = req.ip;
-    const response = await fetch(`https://ipapi.co/${ipAddress}/json/`);
-    const data = (await response.json()) as { latitude: number; longitude: number };
-    userLocation = [data.latitude, data.longitude];
+    ip.getIPInfo(req.ip)
+      .then((data) => {
+        userLocation = [data.lat, data.lon];
+      })
+      .catch(() => null);
   }
 
   // Determine nearest edge
@@ -66,20 +74,32 @@ app.get('/', async (req, res) => {
     await getUserLocation();
     closestNode = findClosestEdgeNode(userLocation!, buildKdTree());
     if (closestNode.id !== EDGE_ID) {
-      res.redirect(`${closestNode.url}?url=${imageUrl}&edgeId=${EDGE_ID}`);
+      res.redirect(`${closestNode.url}?img=${imageUrl}&edgeId=${EDGE_ID}`);
       return;
     }
   }
 
+  // Generate a cache key based on the full URL of the request
+  const cacheKey = req.originalUrl;
+
   // Get image from cache or fetch from origin
   let image;
   edgeDB.transaction(async () => {
-    image = edgeDB.getBinary(imageUrl);
+    image = edgeDB.getBinary(cacheKey);
     if (!image) {
-      image = await fetch(imageUrl).then((res) => res.arrayBuffer());
-      edgeDB.put(imageUrl, image);
+      const d = { h: req.query.h, w: req.query.w };
+
+      image = await resize(
+        imageUrl.toString(),
+        d.w ? parseInt(d.w.toString()) : undefined,
+        d.h ? parseInt(d.h.toString()) : undefined,
+      );
+
+      edgeDB.put(cacheKey, await image.getBufferAsync(Jimp.MIME_PNG));
     }
   });
+
+  // resize image
 
   res.set('Content-Type', 'image/jpeg');
   res.send(image);
@@ -102,7 +122,7 @@ wss.on('connection', (socket, req) => {
           region: data.Continent,
         };
       })
-      .catch((err) => null);
+      .catch(() => null);
   }
   // Handle incoming gossip data from other nodes
   socket.on('error', (err) => console.error(err));
