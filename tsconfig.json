@@ -22,9 +22,13 @@
     }
   },
   "include": [],
+  "exclude": ["node_modules"],
   "references": [
     {
       "path": "packages/edge"
+    },
+    {
+      "path": "packages/ui"
     }
   ]
 }

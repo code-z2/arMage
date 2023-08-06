@@ -47,6 +47,13 @@ function findClosestEdgeNode(userLocation: [number, number], tree: Point) {
   return getEdges()[nearestIndex];
 }
 
+// Define a function to get the user's location based on their IP address
+const getUserLocation = async (ipAddress: string) =>
+  await ip
+    .getIPInfo(ipAddress)
+    .then((data) => [data.lat, data.lon])
+    .catch(() => null);
+
 app.get('/', async (req, res) => {
   const imageUrl = req.query.img;
 
@@ -55,23 +62,12 @@ app.get('/', async (req, res) => {
     return;
   }
 
-  let userLocation: [number, number];
-
-  // Define a function to get the user's location based on their IP address
-  async function getUserLocation() {
-    ip.getIPInfo(req.ip)
-      .then((data) => {
-        userLocation = [data.lat, data.lon];
-      })
-      .catch(() => null);
-  }
-
   // Determine nearest edge
   let closestNode;
   if (req.query.edgeId === EDGE_ID) {
     closestNode = { id: EDGE_ID };
   } else {
-    await getUserLocation();
+    const userLocation = await getUserLocation(req.ip);
     closestNode = findClosestEdgeNode(userLocation!, buildKdTree());
     if (closestNode.id !== EDGE_ID) {
       res.redirect(`${closestNode.url}?img=${imageUrl}&edgeId=${EDGE_ID}`);
@@ -88,14 +84,13 @@ app.get('/', async (req, res) => {
     image = edgeDB.getBinary(cacheKey);
     if (!image) {
       const d = { h: req.query.h, w: req.query.w };
-
       image = await resize(
         imageUrl.toString(),
         d.w ? parseInt(d.w.toString()) : undefined,
         d.h ? parseInt(d.h.toString()) : undefined,
       );
-
-      edgeDB.put(cacheKey, await image.getBufferAsync(Jimp.MIME_PNG));
+      image = await image.getBufferAsync(Jimp.MIME_PNG);
+      edgeDB.put(cacheKey, image);
     }
   });
 
@@ -112,6 +107,7 @@ app.get('/edges', (req, res) => {
 // Handle incoming connections from other nodes
 wss.on('connection', (socket, req) => {
   if (!geo) {
+    // updates geo data on first edge connection asynchronously
     ip.getIPInfo(req.socket.localAddress)
       .then((data) => {
         geo = {
@@ -130,13 +126,11 @@ wss.on('connection', (socket, req) => {
     // Get information about the other edge
     const newData = JSON.parse((data as unknown) as string) as { edge: EdgeNode };
     const newEdge = newData.edge;
-
     // Update the edge map with the new edge data
     const existingEdge = edges.get(newEdge.id);
     if (!existingEdge || newEdge.timestamp! > existingEdge.timestamp!) {
       edges.set(newEdge.id, newEdge);
     }
-
     // Send information about all known nodes to other edge
     socket.send(JSON.stringify({ edges: getEdges() }));
   });
