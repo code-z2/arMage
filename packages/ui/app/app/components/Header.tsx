@@ -1,69 +1,37 @@
 'use client';
 import { LegacyRef, useEffect, useRef, useState } from 'react';
+import { useMageStore, useStore } from '@ui/store';
 
 const Header = () => {
   const [state, setState] = useState(false);
-
-  const navigation = [
-    { title: 'Pro version', path: 'javascript:void(0)' },
-    { title: 'Upgrade', path: 'javascript:void(0)' },
-    { title: 'Support', path: 'javascript:void(0)' },
-  ];
+  const store = useStore(useMageStore, (state) => state);
 
   const submenuNav = [
-    { title: 'Overview', path: 'javascript:void(0)' },
-    { title: 'Integration', path: 'javascript:void(0)' },
-    { title: 'Billing', path: 'javascript:void(0)' },
-    { title: 'Transactions', path: 'javascript:void(0)' },
-    { title: 'Plans', path: 'javascript:void(0)' },
+    { title: 'Overview', path: () => store?.setActiveTab('overview') },
+    { title: 'Licensed', path: () => store?.setActiveTab('licensed') },
+    { title: 'Sub-Licensed', path: () => store?.setActiveTab('sub-licensed') },
+    { title: 'Transactions', path: () => store?.setActiveTab('transactions') },
   ];
 
   const AvatarMenue = () => {
     const [state, setState] = useState(false);
     const profileRef = useRef<HTMLButtonElement>();
 
-    const navigation = [
-      { title: 'Dashboard', path: 'javascript:void(0)' },
-      { title: 'Analytics', path: 'javascript:void(0)' },
-      { title: 'Profile', path: 'javascript:void(0)' },
-      { title: 'Settings', path: 'javascript:void(0)' },
-    ];
-
     useEffect(() => {
       const handleDropDown = (e: any) => {
-        //if (!profileRef.current.contains(e.target)) setState(false);
+        if (profileRef?.current?.contains(e.target)) setState(false);
       };
       document.addEventListener('click', handleDropDown);
     }, []);
 
     return (
-      <div className="relative border-t lg:border-none">
-        <div className="">
-          <button
-            ref={profileRef as LegacyRef<HTMLButtonElement>}
-            className="hidden w-10 h-10 outline-none rounded-full ring-offset-2 ring-gray-200 lg:focus:ring-2 lg:block"
-            onClick={() => setState(!state)}
-          >
-            <img src="https://api.uifaces.co/our-content/donated/xZ4wg2Xj.jpg" className="w-full h-full rounded-full" />
-          </button>
-        </div>
-        <ul
-          className={`bg-white top-14 right-0 mt-6 space-y-6 lg:absolute lg:border lg:rounded-md lg:w-52 lg:shadow-md lg:space-y-0 lg:mt-0 ${
-            state ? '' : 'lg:hidden'
-          }`}
-        >
-          {navigation.map((item, idx) => (
-            <li key={idx}>
-              <a className="block text-gray-600 hover:text-gray-900 lg:hover:bg-gray-50 lg:p-3" href={item.path}>
-                {item.title}
-              </a>
-            </li>
-          ))}
-          <button className="block w-full text-justify text-gray-600 hover:text-gray-900 border-t py-3 lg:hover:bg-gray-50 lg:p-3">
-            Logout
-          </button>
-        </ul>
-      </div>
+      <button
+        ref={profileRef as LegacyRef<HTMLButtonElement>}
+        className="hidden w-10 h-10 outline-none rounded-full ring-offset-2 ring-gray-200 lg:focus:ring-2 lg:block"
+        onClick={() => setState(!state)}
+      >
+        <img src="https://api.uifaces.co/our-content/donated/xZ4wg2Xj.jpg" className="w-full h-full rounded-full" />
+      </button>
     );
   };
 
@@ -75,8 +43,8 @@ const Header = () => {
         }`}
       >
         <div className="flex items-center justify-between py-3 lg:py-5 lg:block">
-          <a href="javascript:void(0)">
-            <img src="https://www.floatui.com/logo.svg" width={120} height={50} alt="Float UI logo" />
+          <a href="/app">
+            <img src="/arMage.png" width={35} height={35} alt="arMage logo" />
           </a>
           <div className="lg:hidden">
             <button className="text-gray-500 hover:text-gray-800" onClick={() => setState(!state)}>
@@ -132,27 +100,51 @@ const Header = () => {
                 />
               </div>
             </form>
-            {navigation.map((item, idx) => {
-              return (
-                <li key={idx}>
-                  <a href={item.path} className="block text-gray-700 hover:text-gray-900">
-                    {item.title}
-                  </a>
-                </li>
-              );
-            })}
+            <li>
+              <button className="block w-full text-justify text-gray-600 hover:text-gray-900 border-b py-3 lg:hover:bg-gray-50 lg:p-3">
+                Logout
+              </button>
+            </li>
+            <li className="">
+              <a
+                href="javascript:void(0)"
+                className="opacity-80 inline-flex text-gray-600 border-teal-600 hover:text-teal-900 border-b py-3 lg:hover:bg-gray-50 lg:p-3 font-medium"
+              >
+                0x....addr{' '}
+                <span>
+                  <svg
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                    className="w-5 h-5 text-gray-600 hover:text-gray-900 pl-2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z"
+                    ></path>
+                  </svg>
+                </span>
+              </a>
+            </li>
             <AvatarMenue />
           </ul>
         </div>
       </div>
-      <nav className="border-b">
-        <ul className="flex items-center gap-x-3 max-w-screen-xl mx-auto px-4 overflow-x-auto lg:px-8">
+      <nav className="border-b mt-5">
+        <ul className="flex max-w-screen-xl mx-auto items-center gap-x-3 px-4 overflow-x-auto lg:px-8">
           {submenuNav.map((item, idx) => {
             return (
               // Replace [idx == 0] with [window.location.pathname == item.path]
-              <li key={idx} className={`py-1 ${idx == 0 ? 'border-b-2 border-indigo-600' : ''}`}>
+              <li
+                key={idx}
+                className={`py-1 ${store?.activeTab == item.title.toLowerCase() ? 'border-b-2 border-teal-600' : ''}`}
+              >
                 <a
-                  href={item.path}
+                  onClick={item.path}
                   className="block py-2 px-3 rounded-lg text-gray-700 hover:text-gray-900 hover:bg-gray-100 duration-150"
                 >
                   {item.title}
@@ -160,6 +152,29 @@ const Header = () => {
               </li>
             );
           })}
+          <li className="ml-auto">
+            <button
+              className="flex items-center gap-2 px-5 py-3 mb-2 text-teal-600 duration-150 bg-teal-50 rounded-lg hover:bg-teal-100 active:bg-teal-200"
+              onClick={() => store?.setActiveTab('upload')}
+            >
+              <svg
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+                className="w-5 h-5"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
+                ></path>
+              </svg>
+              upload
+            </button>
+          </li>
         </ul>
       </nav>
     </header>

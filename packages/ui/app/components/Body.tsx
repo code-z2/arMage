@@ -140,7 +140,7 @@ const Body = () => {
               href="#devpost"
               className="inline-flex gap-x-6 items-center rounded-full p-1 pr-6 border text-sm font-medium duration-150 hover:bg-white"
             >
-              <span className="inline-block rounded-full px-3 py-1 bg-indigo-600 text-white">Hack</span>
+              <span className="inline-block rounded-full px-3 py-1 bg-teal-600 text-white">Hack</span>
               <p className="flex items-center">
                 View hackathon submission here
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -243,7 +243,7 @@ const Body = () => {
             <ul className="grid gap-y-8 gap-x-12 sm:grid-cols-2 lg:grid-cols-3">
               {features.map((item, idx) => (
                 <li key={idx} className="space-y-3">
-                  <div className="w-12 h-12 mx-auto bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center">
+                  <div className="w-12 h-12 mx-auto bg-teal-50 text-teal-600 rounded-full flex items-center justify-center">
                     {item.icon}
                   </div>
                   <h4 className="text-lg text-gray-800 font-semibold">{item.title}</h4>
