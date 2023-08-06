@@ -1,5 +1,13 @@
-import Image from 'next/image';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import Body from './components/Body';
 
 export default function Home() {
-  return <main className="flex min-h-screen flex-col items-center justify-between p-24">armage</main>;
+  return (
+    <div className="relative">
+      <Header />
+      <Body />
+      <Footer />
+    </div>
+  );
 }
