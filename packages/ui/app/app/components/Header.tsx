@@ -1,9 +1,8 @@
 'use client';
-import { LegacyRef, use, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMageStore, useStore } from '@ui/store';
 import Connect from './Connect';
 import Blockies from 'react-blockies';
-import { format } from 'path';
 import { formatAddress } from '@ui/utils/address';
 
 const Header = () => {
@@ -18,15 +17,15 @@ const Header = () => {
     { title: 'Transactions', path: () => store?.setActiveTab('transactions') },
   ];
   const getAddress = async () => {
-    const address = await window.arweaveWallet.getActiveAddress();
-    return address;
+    if (store?.connected) return await window.arweaveWallet.getActiveAddress();
+    return '';
   };
 
   useEffect(() => {
     getAddress().then((address) => {
       setAddress(address);
     });
-  }, []);
+  }, [store?.connected]);
 
   return (
     <header className="text-base lg:text-sm">

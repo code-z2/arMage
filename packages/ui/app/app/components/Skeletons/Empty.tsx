@@ -9,7 +9,10 @@ const Empty = () => {
           <img className="m-auto" src="/empty.jpeg" alt="" width={75} height={75} />
           <h2 className="font-heading mb-3 text-2xl font-semibold">It&rsquo;s a bit empty here</h2>
           <p className="mb-7 text-neutral-500">Upload your first image to receive your very first super power.</p>
-          <button className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg duration-150 hover:bg-indigo-100 active:bg-indigo-200">
+          <button
+            className="inline-flex items-center gap-2 px-4 py-2 text-indigo-600 bg-indigo-50 rounded-lg duration-150 hover:bg-indigo-100 active:bg-indigo-200"
+            onClick={() => state?.setActiveTab('upload')}
+          >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
               <path
                 fillRule="evenodd"
