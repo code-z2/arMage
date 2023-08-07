@@ -1,8 +1,11 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
 import { useState, useEffect } from 'react';
+import { createJSONStorage, persist } from 'zustand/middleware';
 
 interface IMageState {
+  connected: boolean;
+  setConnected: (connected: boolean) => void;
+
   activeTab: 'overview' | 'licensed' | 'sub-licensed' | 'transactions' | 'upload';
   setActiveTab: (activeView: 'overview' | 'licensed' | 'sub-licensed' | 'transactions' | 'upload') => void;
 
@@ -16,6 +19,9 @@ interface IMageState {
 export const useMageStore = create<IMageState>()(
   persist(
     (set) => ({
+      connected: false,
+      setConnected: (connected) => set({ connected }),
+
       activeTab: 'overview',
       setActiveTab: (activeTab) => set({ activeTab }),
 
@@ -26,7 +32,7 @@ export const useMageStore = create<IMageState>()(
       addTransaction: (transactions) => set((state) => ({ transactions: [...state.transactions, transactions] })),
     }),
     {
-      name: 'armage-storage-wild-brocoli-edge',
+      name: 'armage-wild-broccoli-storage-enclave',
       storage: createJSONStorage(() => sessionStorage),
     },
   ),

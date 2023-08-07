@@ -1,9 +1,14 @@
 'use client';
-import { LegacyRef, useEffect, useRef, useState } from 'react';
+import { LegacyRef, use, useEffect, useRef, useState } from 'react';
 import { useMageStore, useStore } from '@ui/store';
+import Connect from './Connect';
+import Blockies from 'react-blockies';
+import { format } from 'path';
+import { formatAddress } from '@ui/utils/address';
 
 const Header = () => {
   const [state, setState] = useState(false);
+  const [address, setAddress] = useState('');
   const store = useStore(useMageStore, (state) => state);
 
   const submenuNav = [
@@ -12,28 +17,16 @@ const Header = () => {
     { title: 'Sub-Licensed', path: () => store?.setActiveTab('sub-licensed') },
     { title: 'Transactions', path: () => store?.setActiveTab('transactions') },
   ];
-
-  const AvatarMenue = () => {
-    const [state, setState] = useState(false);
-    const profileRef = useRef<HTMLButtonElement>();
-
-    useEffect(() => {
-      const handleDropDown = (e: any) => {
-        if (profileRef?.current?.contains(e.target)) setState(false);
-      };
-      document.addEventListener('click', handleDropDown);
-    }, []);
-
-    return (
-      <button
-        ref={profileRef as LegacyRef<HTMLButtonElement>}
-        className="hidden w-10 h-10 outline-none rounded-full ring-offset-2 ring-gray-200 lg:focus:ring-2 lg:block"
-        onClick={() => setState(!state)}
-      >
-        <img src="https://api.uifaces.co/our-content/donated/xZ4wg2Xj.jpg" className="w-full h-full rounded-full" />
-      </button>
-    );
+  const getAddress = async () => {
+    const address = await window.arweaveWallet.getActiveAddress();
+    return address;
   };
+
+  useEffect(() => {
+    getAddress().then((address) => {
+      setAddress(address);
+    });
+  }, []);
 
   return (
     <header className="text-base lg:text-sm">
@@ -100,37 +93,49 @@ const Header = () => {
                 />
               </div>
             </form>
-            <li>
-              <button className="block w-full text-justify text-gray-600 hover:text-gray-900 border-b py-3 lg:hover:bg-gray-50 lg:p-3">
-                Logout
-              </button>
-            </li>
-            <li className="">
-              <a
-                href="javascript:void(0)"
-                className="opacity-80 inline-flex text-gray-600 border-teal-600 hover:text-teal-900 border-b py-3 lg:hover:bg-gray-50 lg:p-3 font-medium"
-              >
-                0x....addr{' '}
-                <span>
-                  <svg
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.5"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                    className="w-5 h-5 text-gray-600 hover:text-gray-900 pl-2"
+
+            {store?.connected ? (
+              <ul className="items-center space-y-6 lg:flex lg:space-x-6 lg:space-y-0">
+                <li>
+                  <button
+                    onClick={() => window.arweaveWallet.disconnect().then(() => store?.setConnected(false))}
+                    className="block w-full text-justify text-gray-600 hover:text-gray-900 border-b py-3 lg:hover:bg-gray-50 lg:p-3"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z"
-                    ></path>
-                  </svg>
-                </span>
-              </a>
-            </li>
-            <AvatarMenue />
+                    Logout
+                  </button>
+                </li>
+                <li className="">
+                  <button
+                    className="opacity-80 inline-flex text-gray-600 border-teal-600 hover:text-teal-900 border-b py-3 lg:hover:bg-gray-50 lg:p-3 font-medium"
+                    onClick={() => navigator.clipboard.writeText(address)}
+                  >
+                    {formatAddress(address)}
+                    <span>
+                      <svg
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                        className="w-5 h-5 text-gray-600 hover:text-gray-900 pl-2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z"
+                        ></path>
+                      </svg>
+                    </span>
+                  </button>
+                </li>
+                <li className="hidden w-10 h-10 outline-none rounded-full ring-offset-2 ring-gray-200 lg:focus:ring-2 lg:block">
+                  <Blockies seed={address} size={10} scale={3} className="rounded-full" />
+                </li>
+              </ul>
+            ) : (
+              <Connect />
+            )}
           </ul>
         </div>
       </div>
@@ -160,15 +165,15 @@ const Header = () => {
               <svg
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.5"
+                strokeWidth="1.5"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
                 aria-hidden="true"
                 className="w-5 h-5"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z"
                 ></path>
               </svg>

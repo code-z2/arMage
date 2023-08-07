@@ -1,16 +1,26 @@
 'use client';
-import Overview from './components/Galleries/Overview';
 import { useMageStore, useStore } from '@ui/store';
-import Upload from './components/Galleries/Upload';
+import { useEffect } from 'react';
+import Licensed from './components/Galleries/Licensed';
+import Overview from './components/Galleries/Overview';
 import SubLicenced from './components/Galleries/SubLicenced';
 import Transactions from './components/Galleries/Transactions';
-import Licensed from './components/Galleries/Licensed';
+import Upload from './components/Galleries/Upload';
 
 export default function App() {
-  const activeTab = useStore(useMageStore, (state) => state.activeTab);
+  const store = useStore(useMageStore, (state) => state);
+  useEffect(() => {
+    addEventListener('arweaveWalletLoaded', async () => {
+      console.log(`You are using the ${window.arweaveWallet.walletName} wallet.`);
+      const permissions = await window.arweaveWallet.getPermissions();
+      if (permissions.length > 0) {
+        store?.setConnected(true);
+      }
+    });
+  }, []);
 
   const renderActiveTab = () => {
-    switch (activeTab) {
+    switch (store?.activeTab) {
       case 'upload':
         return <Upload />;
       case 'licensed':
