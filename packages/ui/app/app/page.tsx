@@ -6,6 +6,7 @@ import Overview from './components/Galleries/Overview';
 import SubLicenced from './components/Galleries/SubLicenced';
 import Transactions from './components/Galleries/Transactions';
 import Upload from './components/Galleries/Upload';
+import Disconnected from './components/Skeletons/Disconnected';
 
 export default function App() {
   const store = useStore(useMageStore, (state) => state);
@@ -33,5 +34,7 @@ export default function App() {
         return <Overview />;
     }
   };
+
+  if (!store?.connected) return <Disconnected />;
   return <div className="h-screen">{renderActiveTab()}</div>;
 }

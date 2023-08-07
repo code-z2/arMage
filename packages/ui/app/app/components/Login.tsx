@@ -5,7 +5,10 @@ const Login = () => {
   const store = useStore(useMageStore, (state) => state);
 
   const connectWallet = async () => {
-    if (!window.arweaveWallet) return;
+    if (!window.arweaveWallet) {
+      window.location.href = 'https://www.arconnect.io/download';
+      return;
+    }
     await window.arweaveWallet
       .connect(['ACCESS_ADDRESS', 'ACCESS_ALL_ADDRESSES', 'SIGN_TRANSACTION', 'SIGNATURE', 'ACCESS_PUBLIC_KEY'], {
         name: 'arMage',
@@ -21,7 +24,11 @@ const Login = () => {
           <h3 className="text-gray-800 text-2xl font-bold sm:text-3xl">Log in with Arweave</h3>
           <p className="">
             Don't have an wallet?{' '}
-            <a href="#" className="font-medium text-teal-600 hover:text-teal-500">
+            <a
+              href="https://www.arconnect.io/download"
+              target="_blank"
+              className="font-medium text-teal-600 hover:text-teal-500"
+            >
               create now
             </a>
           </p>
@@ -61,13 +68,16 @@ const Login = () => {
         </p>
       </div>
       <div className="space-y-4 text-sm font-medium">
-        <button className="w-full flex items-center justify-center gap-x-3 py-2.5 border rounded-lg hover:bg-gray-50 duration-150 active:bg-gray-100">
+        <button
+          className="w-full flex items-center justify-center gap-x-3 py-2.5 border rounded-lg hover:bg-gray-50 duration-150 active:bg-gray-100"
+          onClick={() => alert('please use arConnect wallet')}
+        >
           <img src="/mm.svg" width={20} height={20} alt="Metamask logo" />
           Metamask
         </button>
       </div>
       <div className="text-center">
-        <a href="#" className="text-teal-600 hover:text-teal-500">
+        <a href="https://youtu.be/ah1jrMGBUvo" target="_blank" className="text-teal-600 hover:text-teal-500">
           don't know how to connect?
         </a>
       </div>

@@ -1,7 +1,13 @@
 import React from 'react';
+import Gallery from '../Skeletons/Gallery';
 
+// Licensed: should take all the images and filter out only those with a universal data license
 const Licensed = () => {
-  return <div>Licensed: should take all the images and filter out only those with a universal data license</div>;
+  return (
+    <div>
+      <Gallery />
+    </div>
+  );
 };
 
 export default Licensed;
