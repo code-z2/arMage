@@ -9,6 +9,7 @@ import { Edge, Edges, IResponse } from './types.js';
 
 export const edges: Edges = new Map();
 export const sockets = new Map<string, WebSocket>();
+export const wsIdentifier = new WeakMap<WebSocket, string>();
 
 // Set up LMDB environment and open database
 const env = open({ path: './lmdb', mapSize: 2 * 1024 * 1024 * 1024 });
@@ -27,20 +28,9 @@ export const getClosestEdge = async (ipAddress: string) => {
   return findClosest(userLocation, getEdges());
 };
 
-// get peers active in the last epoch
-export function getEdges(epoch = GOSSIP_INTERVAL * 2): Edge[] {
-  return Array.from(edges.values()).filter((edge) => edge.timestamp! > Date.now() - epoch - 1000);
-}
-
-// purge peers inactive for more than 3 epochs
-export function purge(epoch = GOSSIP_INTERVAL * 3): void {
-  for (const [id, edge] of edges) {
-    if (edge.timestamp! <= Date.now() - epoch) {
-      edges.delete(id);
-      sockets.get(id)?.close();
-      sockets.delete(id);
-    }
-  }
+// gets all the active peers as array
+export function getEdges(): Edge[] {
+  return Array.from(edges.values());
 }
 
 // redirect request to the closest edge node
@@ -120,7 +110,7 @@ const connect = async (edge: Edge, message: IResponse) => {
 
     if (response.type === 'handshake-response') {
       response.edges?.forEach((edge: Edge) => {
-        if (edge.id !== EDGE_ID) edges.set(edge.id, edge);
+        edges.set(edge.id, edge);
       });
     }
   });
@@ -150,6 +140,7 @@ const bootstrap = async () => {
     bsWS.on('open', async () => {
       const message: IResponse = {
         type: 'handshake',
+        bootstrap: true,
         edge: SELF,
       };
 
@@ -181,9 +172,8 @@ export function initialize() {
           type: 'handshake',
           edge: SELF,
         };
-        await connect(edge, message);
+        if (edge.id !== SELF.id) await connect(edge, message);
       }
-      purge();
     }, GOSSIP_INTERVAL),
   );
 }

@@ -24,4 +24,5 @@ export interface IResponse {
   type: Response;
   edge?: Edge;
   edges?: Edge[];
+  bootstrap?: boolean;
 }

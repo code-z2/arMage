@@ -3,6 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
+import { hash } from './actions.js';
 import { EDGE_ID, PORT } from './constants.js';
 import {
   edges,
@@ -13,9 +14,9 @@ import {
   initialize,
   redirectRequest,
   sockets,
+  wsIdentifier,
 } from './server.js';
 import { Edge, IResponse } from './types.js';
-import { hash } from './actions.js';
 
 const app = express();
 app.use(bodyParser.json());
@@ -63,9 +64,9 @@ app.get('/health', (_, res) => {
 
 wss.on('connection', (socket, req) => {
   socket.on('message', async (data) => {
-    const message = JSON.parse(data.toString()) as { edge: Edge; type: string };
+    const message = JSON.parse(data.toString()) as IResponse;
 
-    if (message.type === 'handshake') {
+    if (message.type === 'handshake' && message.edge) {
       const _edge: Edge = {
         ...message.edge,
         address: req.socket.remoteAddress,
@@ -79,19 +80,18 @@ wss.on('connection', (socket, req) => {
         edges: getEdges(),
       };
 
+      if (!message?.bootstrap && !wsIdentifier.has(socket)) wsIdentifier.set(socket, _edge.id);
       socket.send(JSON.stringify(response));
       edges.set(_edge.id, _edge);
     }
   });
 
   socket.on('close', () => {
-    for (const [id, socket] of sockets.entries()) {
-      if (socket === socket) {
-        sockets.delete(id);
-        edges.delete(id);
-        console.log(`Edge ${id} disconnected`);
-        break;
-      }
+    const id = wsIdentifier.get(socket);
+    if (id) {
+      sockets.delete(id);
+      edges.delete(id);
+      console.log(`Edge ${id} disconnected`);
     }
   });
   socket.on('error', (err) => console.error(err));
