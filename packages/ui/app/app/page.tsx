@@ -22,12 +22,11 @@ export default function App() {
   });
   const { data, fetching, error } = result;
 
-  const setNearestEdge = () => {
+  const setNearestEdge = () =>
     axios
-      .get(process.env.EDGE_URL || '')
+      .get(process.env.EDGE_URL || 'http://127.0.0.1:3002/edge')
       .then((res) => store?.setEdge(res.data.url))
       .catch((err) => console.log(err));
-  };
 
   useEffect(() => {
     addEventListener('arweaveWalletLoaded', async () => {
