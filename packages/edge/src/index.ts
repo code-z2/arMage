@@ -21,11 +21,15 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
+app.use((_, res, next) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  next();
+});
+
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
 app.get('/edge', async (req, res) => {
-  // '197.210.85.59'
   const closestEdge = await getClosestEdge(req.ip);
   res.json(closestEdge);
 });
@@ -44,7 +48,7 @@ app.get('/', async (req, res) => {
   // Generate a cache key based on the full URL of the request
   const cacheKey = hash(req.originalUrl);
   // redirect to low latency edge
-  redirectRequest(req, res, image.toString());
+  redirectRequest(req, res, req.originalUrl);
   // Get image from cache or serve from origin
   const imageBinary = await getImage(req.query, cacheKey);
 
@@ -85,6 +89,7 @@ wss.on('connection', (socket, req) => {
       if (socket === socket) {
         sockets.delete(id);
         edges.delete(id);
+        console.log(`Edge ${id} disconnected`);
         break;
       }
     }

@@ -48,7 +48,7 @@ export const redirectRequest = async (req: any, res: any, url: string) => {
   if (req.query.edgeId !== EDGE_ID) {
     const closestEdge = await getClosestEdge(req.ip);
     if (closestEdge && closestEdge.id !== EDGE_ID) {
-      res.redirect(`${closestEdge.url}?img=${url}&edgeId=${closestEdge.id}`);
+      res.redirect(`${closestEdge.url}${url}&edgeId=${closestEdge.id}`);
       return;
     }
   }
