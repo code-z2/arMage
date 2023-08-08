@@ -30,3 +30,4 @@ lmdb/
 leveldb/
 
 dist/
+.env
