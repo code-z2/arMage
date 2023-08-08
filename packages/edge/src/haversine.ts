@@ -23,7 +23,7 @@ export function findClosest(target: [number, number], candidates: Edge[]) {
   let closestCoordinates: Edge[] = [];
 
   candidates.forEach((candidate) => {
-    const distance = haversineDistance(target, candidate.location);
+    const distance = haversineDistance(target, candidate.location || [0, 0]);
     if (distance < closestDistance) {
       closestDistance = distance;
       closestCoordinates = [candidate];

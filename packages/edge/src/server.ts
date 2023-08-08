@@ -1,10 +1,11 @@
-import { open } from 'lmdb';
+import axios from 'axios';
+import Jimp from 'jimp';
+import { asBinary, open } from 'lmdb';
 import WebSocket from 'ws';
-import { BOOTSTRAP_EDGE, EDGE_ID, GOSSIP_INTERVAL, SELF } from './constants.js';
+import { blur, crop, greyscale, opacity, resize, rotate } from './actions.js';
+import { BOOTSTRAP, EDGE_ID, GOSSIP_INTERVAL, SELF } from './constants.js';
 import { findClosest } from './haversine.js';
 import { Edge, Edges, IResponse } from './types.js';
-import Jimp from 'jimp';
-import { blur, crop, greyscale, opacity, resize, rotate } from './actions.js';
 
 export const edges: Edges = new Map();
 export const sockets = new Map<string, WebSocket>();
@@ -46,46 +47,62 @@ export function purge(epoch = GOSSIP_INTERVAL * 3): void {
 export const redirectRequest = async (req: any, res: any, url: string) => {
   if (req.query.edgeId !== EDGE_ID) {
     const closestEdge = await getClosestEdge(req.ip);
-    if (closestEdge.id !== EDGE_ID) {
+    if (closestEdge && closestEdge.id !== EDGE_ID) {
       res.redirect(`${closestEdge.url}?img=${url}&edgeId=${closestEdge.id}`);
       return;
     }
   }
 };
 
+const fetchArweaveImage = async (transactionId) => {
+  const response = await axios.get(`https://arweave.net/${transactionId}`, {
+    responseType: 'arraybuffer',
+  });
+  return response.data;
+};
+
 // parses the image back to the user, an caches it
-export const getImage = (query, key: string) => {
+export const getImage = async (query, key: string) => {
   let image;
-  edgeDB.transaction(async () => {
+  await edgeDB.transaction(async () => {
     image = edgeDB.getBinary(key);
+    console.log(image);
     if (!image) {
-      let modifiedImage: Jimp = query.img;
+      try {
+        const binary = await fetchArweaveImage(query.img);
+        let modifiedImage: Jimp = await Jimp.read(binary);
 
-      if (query.resize) {
-        const [width, height] = query.resize.split(',');
-        modifiedImage = await resize(key, parseInt(width), parseInt(height));
-      } else if (query.blur) {
-        modifiedImage = await blur(modifiedImage, parseInt(query.blur));
-      } else if (query.greyscale) {
-        modifiedImage = await greyscale(modifiedImage);
-      } else if (query.opacity) {
-        modifiedImage = await opacity(modifiedImage, parseInt(query.opacity));
-      } else if (query.rotate) {
-        modifiedImage = await rotate(modifiedImage, parseInt(query.rotate));
-      } else if (query.crop)
-        modifiedImage = await crop(
-          modifiedImage,
-          parseInt(query.x),
-          parseInt(query.y),
-          parseInt(query.w),
-          parseInt(query.h),
-        );
+        if (query.resize) {
+          const [width, height] = query.resize.split(',');
+          modifiedImage = await resize(modifiedImage, parseInt(width), parseInt(height));
+        } else if (query.blur) {
+          modifiedImage = await blur(modifiedImage, parseInt(query.blur));
+        } else if (query.greyscale) {
+          modifiedImage = await greyscale(modifiedImage);
+        } else if (query.opacity) {
+          modifiedImage = await opacity(modifiedImage, parseInt(query.opacity));
+        } else if (query.rotate) {
+          modifiedImage = await rotate(modifiedImage, parseInt(query.rotate));
+        } else if (query.crop)
+          modifiedImage = await crop(
+            modifiedImage,
+            parseInt(query.x),
+            parseInt(query.y),
+            parseInt(query.w),
+            parseInt(query.h),
+          );
 
-      image = await modifiedImage.getBufferAsync(Jimp.MIME_PNG);
-      edgeDB.put(key, image);
+        modifiedImage.quality(50);
+
+        modifiedImage.getBuffer(modifiedImage.getMIME(), (_, buffer) => {
+          image = buffer;
+          edgeDB.put(key, asBinary(buffer));
+        });
+      } catch (error) {
+        image = undefined;
+      }
     }
   });
-
   return image;
 };
 
@@ -111,36 +128,51 @@ const connect = async (edge: Edge) => {
   return newSocket.on('open', () => newSocket);
 };
 
+// checks if the specified bootstrap node is active
+export const checkBootstrap = async () => {
+  try {
+    const response = await fetch(`${BOOTSTRAP.replace('ws', 'http')}/health`);
+    return response.status === 200;
+  } catch (error) {
+    return false;
+  }
+};
+
 // bootstrap edge from an existing known node
 const bootstrap = async () => {
-  const bsWS = new WebSocket(BOOTSTRAP_EDGE.wsUrl);
+  if (await checkBootstrap()) {
+    const bsWS = new WebSocket(BOOTSTRAP);
 
-  bsWS.on('open', async () => {
-    const message: IResponse = {
-      type: 'handshake',
-      edge: SELF,
-    };
+    bsWS.on('open', async () => {
+      const message: IResponse = {
+        type: 'handshake',
+        edge: SELF,
+      };
 
-    bsWS.send(JSON.stringify(message));
-  });
+      bsWS.send(JSON.stringify(message));
+    });
 
-  bsWS.on('message', (data) => {
-    const response: IResponse = JSON.parse(data.toString());
+    bsWS.on('message', (data) => {
+      const response: IResponse = JSON.parse(data.toString());
 
-    if (response.type === 'handshake-response') {
-      response.edges?.forEach((edge: Edge) => {
-        edges.set(edge.id, edge);
-      });
+      if (response.type === 'handshake-response') {
+        response.edges?.forEach((edge: Edge) => {
+          edges.set(edge.id, edge);
+        });
 
-      bsWS.close();
-    }
-  });
+        bsWS.close();
+      }
+    });
+  } else {
+    console.log('Skipping Bootstrap');
+  }
 };
 
 export function initialize() {
   bootstrap().then(() =>
     setInterval(async () => {
       const _edges = await getEdges();
+      console.log('gossiping to', _edges.length, 'edges', _edges);
       for (const edge of _edges) {
         const ws: WebSocket = await connect(edge);
         const message: IResponse = {

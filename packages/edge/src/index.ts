@@ -30,7 +30,7 @@ app.get('/edge', async (req, res) => {
   res.json(closestEdge);
 });
 
-app.get('/edges', (req, res) => {
+app.get('/edges', (_, res) => {
   res.json(getEdges());
 });
 
@@ -46,14 +46,19 @@ app.get('/', async (req, res) => {
   // redirect to low latency edge
   redirectRequest(req, res, image.toString());
   // Get image from cache or serve from origin
-  const imageBinary = getImage(req.query, cacheKey);
+  const imageBinary = await getImage(req.query, cacheKey);
 
-  res.set('Content-Type', 'image/png');
+  res.set('Content-Type', 'image/jpeg');
   res.send(imageBinary);
 });
 
-wss.on('connection', (ws, req) => {
-  ws.on('message', async (data) => {
+// health route, for checking if the server is up
+app.get('/health', (_, res) => {
+  res.send('OK');
+});
+
+wss.on('connection', (socket, req) => {
+  socket.on('message', async (data) => {
     const message = JSON.parse(data.toString()) as { edge: Edge; type: string };
 
     if (message.type === 'handshake') {
@@ -71,20 +76,20 @@ wss.on('connection', (ws, req) => {
         edges: getEdges(),
       };
 
-      ws.send(JSON.stringify(response));
+      socket.send(JSON.stringify(response));
     }
   });
 
-  ws.on('close', () => {
+  socket.on('close', () => {
     for (const [id, socket] of sockets.entries()) {
-      if (socket === ws) {
+      if (socket === socket) {
         sockets.delete(id);
         edges.delete(id);
         break;
       }
     }
   });
-  ws.on('error', (err) => console.error(err));
+  socket.on('error', (err) => console.error(err));
 });
 
 server.listen(PORT, () => {

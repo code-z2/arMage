@@ -11,8 +11,3 @@ export const SELF = {
   url: `${HOST}:${PORT}`.startsWith('http') ? `${HOST}:${PORT}` : `http://${HOST}:${PORT}`,
   wsUrl: `${HOST}:${PORT}`.startsWith('http') ? `${HOST}:${PORT}`.replace('http', 'ws') : `ws://${HOST}:${PORT}`,
 };
-export const BOOTSTRAP_EDGE: Edge = {
-  id: 'bootstrap',
-  url: BOOTSTRAP,
-  wsUrl: BOOTSTRAP.replace('http', 'ws'),
-};
