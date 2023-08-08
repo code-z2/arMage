@@ -29,13 +29,13 @@ export const getClosestEdge = async (ipAddress: string) => {
 
 // get peers active in the last epoch
 export function getEdges(epoch = GOSSIP_INTERVAL * 2): Edge[] {
-  return Array.from(edges.values()).filter((edge) => Date.now() - 1000 - edge.timestamp! > epoch);
+  return Array.from(edges.values()).filter((edge) => edge.timestamp! > Date.now() - epoch - 1000);
 }
 
 // purge peers inactive for more than 3 epochs
 export function purge(epoch = GOSSIP_INTERVAL * 3): void {
   for (const [id, edge] of edges) {
-    if (Date.now() - edge.timestamp! > epoch) {
+    if (edge.timestamp! <= Date.now() - epoch) {
       edges.delete(id);
       sockets.get(id)?.close();
       sockets.delete(id);
@@ -66,7 +66,6 @@ export const getImage = async (query, key: string) => {
   let image;
   await edgeDB.transaction(async () => {
     image = edgeDB.getBinary(key);
-    console.log(image);
     if (!image) {
       try {
         const binary = await fetchArweaveImage(query.img);
@@ -107,9 +106,12 @@ export const getImage = async (query, key: string) => {
 };
 
 // creates a new websocket connection with an external edge
-const connect = async (edge: Edge) => {
+const connect = async (edge: Edge, message: IResponse) => {
   const socket = sockets.get(edge.id);
-  if (socket) return socket;
+  if (socket) {
+    socket.send(JSON.stringify(message));
+    return;
+  }
   const newSocket = new WebSocket(edge.wsUrl);
   sockets.set(edge.id, newSocket);
 
@@ -125,7 +127,9 @@ const connect = async (edge: Edge) => {
   newSocket.on('error', (err) => {
     console.error('socket client error', err);
   });
-  return newSocket.on('open', () => newSocket);
+  newSocket.on('open', () => {
+    newSocket.send(JSON.stringify(message));
+  });
 };
 
 // checks if the specified bootstrap node is active
@@ -159,7 +163,6 @@ const bootstrap = async () => {
         response.edges?.forEach((edge: Edge) => {
           edges.set(edge.id, edge);
         });
-
         bsWS.close();
       }
     });
@@ -172,14 +175,13 @@ export function initialize() {
   bootstrap().then(() =>
     setInterval(async () => {
       const _edges = await getEdges();
-      console.log('gossiping to', _edges.length, 'edges', _edges);
+      console.log('active peers', _edges.length);
       for (const edge of _edges) {
-        const ws: WebSocket = await connect(edge);
         const message: IResponse = {
           type: 'handshake',
           edge: SELF,
         };
-        ws.send(JSON.stringify(message));
+        await connect(edge, message);
       }
       purge();
     }, GOSSIP_INTERVAL),

@@ -3,7 +3,7 @@ import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import { PORT } from './constants.js';
+import { EDGE_ID, PORT } from './constants.js';
 import {
   edges,
   getClosestEdge,
@@ -69,7 +69,6 @@ wss.on('connection', (socket, req) => {
         timestamp: Date.now(),
         location: await getLocation(req.socket.remoteAddress || ''),
       };
-      edges.set(_edge.id, _edge);
 
       const response: IResponse = {
         type: 'handshake-response',
@@ -77,6 +76,7 @@ wss.on('connection', (socket, req) => {
       };
 
       socket.send(JSON.stringify(response));
+      edges.set(_edge.id, _edge);
     }
   });
 
@@ -94,5 +94,5 @@ wss.on('connection', (socket, req) => {
 
 server.listen(PORT, () => {
   initialize();
-  console.log(`Express server listening at http://localhost:${PORT}`);
+  console.log(`Express server listening at http://localhost:${PORT}\n`, `Edge websocket Id: ${EDGE_ID}`);
 });
