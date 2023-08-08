@@ -11,9 +11,6 @@ interface IMageState {
 
   edge: string | null;
   setEdge: (edge: string | null) => void;
-
-  transactions: { [key: string]: any }[];
-  addTransaction: (transactions: any[]) => void;
 }
 
 export const useMageStore = create<IMageState>()(
@@ -27,9 +24,6 @@ export const useMageStore = create<IMageState>()(
 
       edge: null,
       setEdge: (edge) => set({ edge }),
-
-      transactions: [],
-      addTransaction: (transactions) => set((state) => ({ transactions: [...state.transactions, transactions] })),
     }),
     {
       name: 'armage-wild-broccoli-storage-enclave',

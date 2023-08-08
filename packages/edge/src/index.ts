@@ -1,7 +1,7 @@
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express from 'express';
-import { createServer } from 'http';
+import { createServer, get } from 'http';
 import { WebSocketServer } from 'ws';
 import { hash } from './actions.js';
 import { EDGE_ID, PORT } from './constants.js';
@@ -32,7 +32,7 @@ const wss = new WebSocketServer({ server });
 
 app.get('/edge', async (req, res) => {
   const closestEdge = await getClosestEdge(req.ip);
-  res.json(closestEdge);
+  res.json(closestEdge || getEdges()[0]);
 });
 
 app.get('/edges', (_, res) => {

@@ -12,7 +12,7 @@ const Header = () => {
 
   const submenuNav = [
     { title: 'Overview', path: () => store?.setActiveTab('overview') },
-    { title: 'Licensed', path: () => store?.setActiveTab('licensed') },
+    // { title: 'Licensed', path: () => store?.setActiveTab('licensed') },
     { title: 'Sub-Licensed', path: () => store?.setActiveTab('sub-licensed') },
     { title: 'Transactions', path: () => store?.setActiveTab('transactions') },
   ];
@@ -156,7 +156,7 @@ const Header = () => {
               </li>
             );
           })}
-          <li className="ml-auto">
+          <li className="ml-auto" key={'last'}>
             <button
               className="flex items-center gap-2 px-5 py-3 mb-2 text-teal-600 duration-150 bg-teal-50 rounded-lg hover:bg-teal-100 active:bg-teal-200"
               onClick={() => store?.setActiveTab('upload')}

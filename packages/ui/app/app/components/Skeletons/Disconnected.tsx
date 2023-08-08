@@ -12,7 +12,7 @@ const Disconnected = () => {
             width={75}
             height={75}
           />
-          <h2 className="font-heading mb-3 text-2xl font-semibold">Unable to reach your wallet</h2>
+          <h2 className="font-heading mb-3 text-2xl font-semibold">Trying to reach your wallet</h2>
           <p className="mb-7 text-neutral-500">
             Connect an Arweave wallet first, then you can continue. I would suggest{' '}
             <a href="https://arconnect.io" target="_blank" className="text-blue-600 underline">
