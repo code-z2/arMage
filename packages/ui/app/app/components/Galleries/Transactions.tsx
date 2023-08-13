@@ -1,7 +1,11 @@
 import React from 'react';
 import { formatAddress } from '@ui/utils/address';
+import Empty from '../Skeletons/Empty';
 
 const Transactions = ({ tx }: { tx?: any[] }) => {
+  if (tx?.length === 0) {
+    return <Empty />;
+  }
   return (
     <div className="max-w-screen-xl mx-auto px-4 p-10">
       <div className="max-w-lg">
@@ -24,7 +28,11 @@ const Transactions = ({ tx }: { tx?: any[] }) => {
                 <td className="px-6 py-4 whitespace-nowrap">{formatAddress(item?.node?.owner?.address)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">{formatAddress(item?.node?.id)}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <a href={`https://arweave.net/${item?.node?.id}`} target="_blank" className="text-blue-500 underline">
+                  <a
+                    href={`https://viewblock.io/arweave/tx/${item?.node?.id}`}
+                    target="_blank"
+                    className="text-blue-500 underline"
+                  >
                     link
                   </a>
                 </td>

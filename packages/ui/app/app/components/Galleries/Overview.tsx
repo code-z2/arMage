@@ -1,5 +1,6 @@
 'use client';
 import { useStore, useMageStore } from '@ui/store';
+import Empty from '../Skeletons/Empty';
 
 const Overview = ({ images }: { images?: any[] }) => {
   const edge = useStore(useMageStore, (state) => state.edge);
@@ -13,6 +14,10 @@ const Overview = ({ images }: { images?: any[] }) => {
     link.download = name;
     link.click();
   };
+
+  if (images?.length === 0) {
+    return <Empty />;
+  }
 
   return (
     <div className="columns-1 gap-5 md:columns-2 lg:columns-4 max-w-screen-xl mx-auto p-10">

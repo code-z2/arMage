@@ -12,40 +12,46 @@ import Gallery from './components/Skeletons/Gallery';
 import Table from './components/Skeletons/Table';
 import query from '@ui/utils/query';
 import { useQuery } from 'urql';
-import Empty from './components/Skeletons/Empty';
 
 export default function App() {
   const store = useStore(useMageStore, (state) => state);
   const [address, setAddress] = useState('');
   const [result, reexecuteQuery] = useQuery({
-    query: query('M6w588ZkR8SVFdPkNXdBy4sqbMN0Y3F8ZJUWm2WCm8M'),
+    query: query(address),
   });
   const { data, fetching, error } = result;
 
   const setNearestEdge = () =>
     axios
-      .get(process.env.EDGE_URL || 'http://127.0.0.1:3002/edge')
+      .get(process.env.NEXT_PUBLIC_EDGE_URL || 'http://127.0.0.1:3002/edge')
       .then((res) => store?.setEdge(res.data.url))
       .catch((err) => console.log(err));
 
-  useEffect(() => {
-    addEventListener('arweaveWalletLoaded', async () => {
-      console.log(`You are using the ${window.arweaveWallet.walletName} wallet.`);
-      const permissions = await window.arweaveWallet.getPermissions();
-      if (permissions.length > 0) {
-        store?.setConnected(true);
-        const address = await window.arweaveWallet.getActiveAddress();
-        setAddress(address);
-        if (error) reexecuteQuery();
-      }
-    });
+  const initApp = async () => {
     setNearestEdge();
-  }, []);
+    let address: string | undefined;
+
+    const permissions = await window.arweaveWallet.getPermissions();
+    if (permissions.length > 0) {
+      address = await window.arweaveWallet.getActiveAddress();
+      setAddress(address);
+      console.log('Wallet address set:', address);
+    }
+
+    console.log('Reexecuting with address:', address);
+    reexecuteQuery();
+  };
+
+  useEffect(() => {
+    if (window.arweaveWallet && store?.connected) {
+      initApp();
+    }
+  }, [store?.connected]);
 
   const renderActiveTab = () => {
     switch (store?.activeTab) {
       case 'upload':
-        return fetching || error ? <Gallery /> : <Upload />;
+        return <Upload callback={reexecuteQuery} />;
       case 'licensed':
         return fetching || error ? <Gallery /> : <Licensed />;
       case 'transactions':
@@ -58,9 +64,5 @@ export default function App() {
   };
 
   if (!store?.connected) return <Disconnected />;
-  return (
-    <div className="h-screen">
-      {data?.transactions?.edges?.length <= 0 && !fetching && !error ? <Empty /> : renderActiveTab()}
-    </div>
-  );
+  return <div className="h-[75vh]">{renderActiveTab()}</div>;
 }
