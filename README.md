@@ -44,9 +44,9 @@ currently, there are 6 image transformations that you can apply to an image:
 
 for example, if you want to transform an image to (grayscale, blur, resize), you would do:
 
-1. `https://<edge-hostname>:<port>?imag=<txId>&grayscale=true`
-2. `https://<edge-hostname>:<port>?imag=<txId>&blur=20`
-3. `https://<edge-hostname>:<port>?imag=<txId>&resize=150,150`
+1. `https://<edge-hostname>:<port>?img=<txId>&grayscale=true`
+2. `https://<edge-hostname>:<port>?img=<txId>&blur=20`
+3. `https://<edge-hostname>:<port>?img=<txId>&resize=150,150`
 
 currently, the edge servers do not support chaining of transformations, so you can only apply one transformation at a time.
 
