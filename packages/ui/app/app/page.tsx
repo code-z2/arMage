@@ -23,7 +23,7 @@ export default function App() {
 
   const setNearestEdge = () =>
     axios
-      .get(process.env.NEXT_PUBLIC_EDGE_URL || 'http://127.0.0.1:3002/edge')
+      .get(process.env.NEXT_PUBLIC_EDGE_URL || 'https://armage-production.up.railway.app/edge')
       .then((res) => store?.setEdge(res.data.url))
       .catch((err) => console.log(err));
 
