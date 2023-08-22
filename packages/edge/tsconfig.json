@@ -1,5 +1,4 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "strict": true,
     "target": "es6",
@@ -11,7 +10,8 @@
     "resolveJsonModule": true,
     "rootDir": "src",
     "outDir": "dist",
-    "removeComments": false
+    "removeComments": false,
+    "noImplicitAny": false
   },
   "include": ["src"],
   "exclude": ["dist"],

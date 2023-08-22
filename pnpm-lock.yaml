@@ -77,6 +77,9 @@ importers:
 
   packages/edge:
     dependencies:
+      '@types/body-parser':
+        specifier: ^1.19.2
+        version: 1.19.2
       '@types/express':
         specifier: ^4.17.17
         version: 4.17.17
@@ -111,6 +114,9 @@ importers:
         specifier: ^8.13.0
         version: 8.13.0(bufferutil@4.0.7)(utf-8-validate@5.0.10)
     devDependencies:
+      '@types/cors':
+        specifier: ^2.8.13
+        version: 2.8.13
       '@types/node-fetch':
         specifier: ^2.6.4
         version: 2.6.4
@@ -123,6 +129,9 @@ importers:
       jimp:
         specifier: ^0.22.10
         version: 0.22.10
+      typescript:
+        specifier: ^5.1.6
+        version: 5.1.6
 
   packages/ui:
     dependencies:
@@ -4231,6 +4240,12 @@ packages:
       '@types/keygrip': 1.0.2
       '@types/node': 20.4.8
     dev: false
+
+  /@types/cors@2.8.13:
+    resolution: {integrity: sha512-RG8AStHlUiV5ysZQKq97copd2UmVYw3/pRMLefISZ3S1hK104Cwm7iLQ3fTKx+lsUH2CE8FlLaYeEA2LSeqYUA==}
+    dependencies:
+      '@types/node': 20.4.8
+    dev: true
 
   /@types/express-serve-static-core@4.17.35:
     resolution: {integrity: sha512-wALWQwrgiB2AWTT91CB62b6Yt0sNHpznUXeZEcnPU3DRdlDIz74x8Qg1UUYKSVFi+va5vKOLYRBI1bRKiLLKIg==}

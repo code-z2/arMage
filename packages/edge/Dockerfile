@@ -1,9 +1,9 @@
 FROM node:16
 WORKDIR /usr/app
 COPY package*.json ./
-RUN npm install
+RUN yarn install
 COPY . .
-RUN npm run build
+RUN yarn build
 EXPOSE 3000
-CMD [ "npx", "ts-node-esm", "dist/index.js" ]
+CMD [ "yarn", "node", "dist/index.js" ]
 
