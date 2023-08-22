@@ -4,7 +4,7 @@ import express from 'express';
 import { createServer, get } from 'http';
 import { WebSocketServer } from 'ws';
 import { hash } from './actions.js';
-import { EDGE_ID, PORT } from './constants.js';
+import { EDGE_ID, PORT, SELF } from './constants.js';
 import {
   edges,
   getClosestEdge,
@@ -32,7 +32,7 @@ const wss = new WebSocketServer({ server });
 
 app.get('/edge', async (req, res) => {
   const closestEdge = await getClosestEdge(req.ip);
-  res.json(closestEdge || getEdges()[0]);
+  res.json(closestEdge || getEdges()[0] || SELF);
 });
 
 app.get('/edges', (_, res) => {

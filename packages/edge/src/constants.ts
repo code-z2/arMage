@@ -8,6 +8,6 @@ export const GOSSIP_INTERVAL = parseInt(process.env.GOSSIP_INTERVAL || `${60000 
 export const EDGE_ID = hash(`${HOST}:${PORT}`);
 export const SELF = {
   id: EDGE_ID,
-  url: `${HOST}:${PORT}`.startsWith('http') ? `${HOST}:${PORT}` : `http://${HOST}:${PORT}`,
-  wsUrl: `${HOST}:${PORT}`.startsWith('http') ? `${HOST}:${PORT}`.replace('http', 'ws') : `ws://${HOST}:${PORT}`,
+  url: `${HOST}:${PORT}`.startsWith('http') ? `${HOST}` : `http://${HOST}`,
+  wsUrl: `${HOST}:${PORT}`.startsWith('http') ? `${HOST}`.replace('http', 'ws') : `ws://${HOST}`,
 };
